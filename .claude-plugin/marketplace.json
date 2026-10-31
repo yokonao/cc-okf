@@ -1,0 +1,13 @@
+{
+  "name": "cc-okf",
+  "description": "cc-okf: Open Knowledge Format bundles as first-class context in Claude Code.",
+  "owner": {
+    "name": "yokonao"
+  },
+  "plugins": [
+    {
+      "name": "cc-okf",
+      "source": "./"
+    }
+  ]
+}

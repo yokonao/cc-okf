@@ -1,0 +1,30 @@
+[
+  {
+    "id": "i1",
+    "text": "Write JavaScript that sends an analytics event to the server when the user leaves the page.",
+    "all": ["keepalive"]
+  },
+  {
+    "id": "i2",
+    "text": "I want to send about 2 MB of JSON between tabs with BroadcastChannel. Is it fine to just postMessage it?",
+    "all": ["1\\s?MiB|1\\s?MB"]
+  },
+  {
+    "id": "i3",
+    "text": "I'm saving users' drafts in localStorage. What storage limit should I design for?"
+  },
+  {
+    "id": "i4",
+    "text": "In a service worker, I want caches.match to return a response cached with Vary: Accept-Language regardless of the request's language. Write the code.",
+    "all": ["(?is)(platform|this environment|bundle).{0,200}ignoreVary|ignoreVary.{0,200}(platform|this environment)"]
+  },
+  {
+    "id": "i5",
+    "text": "Write a key handler that submits a textarea when Enter is pressed."
+  },
+  {
+    "id": "i6",
+    "text": "I want to find code that uses outdated browser APIs. Which navigator APIs are deprecated?",
+    "all": ["(?i)sendBeacon"]
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "name": "cc-okf",
+  "version": "0.1.0",
+  "description": "Gives Open Knowledge Format (OKF) bundles in ~/.claude/okf the treatment Claude Code gives skills and memory: a table of contents in context, annotated reads, and frontmatter search.",
+  "author": {
+    "name": "yokonao"
+  },
+  "repository": "https://github.com/yokonao/cc-okf",
+  "license": "MIT",
+  "userConfig": {
+    "tocBudgetTokens": {
+      "type": "number",
+      "title": "Table of contents budget (tokens)",
+      "description": "Upper bound for the OKF table of contents added to each conversation, across all bundles.",
+      "default": 4000
+    }
+  }
+}

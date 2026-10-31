@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22
+      # The hooks module API is early access; pin the version the plugin was checked against.
+      - run: npm install -g @anthropic-ai/claude-code@2.1.316
+      - run: claude plugin validate .
+      - run: claude plugin test .

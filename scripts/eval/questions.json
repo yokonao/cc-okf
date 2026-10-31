@@ -1,0 +1,32 @@
+[
+  {
+    "id": "q1",
+    "text": "I want to send analytics data to the server when the user leaves the page. Which API should I use?",
+    "all": ["keepalive", "(?is)sendBeacon.{0,120}(deprecated|avoid|don't use|do not use)|(deprecated|avoid).{0,120}sendBeacon"]
+  },
+  {
+    "id": "q2",
+    "text": "What is the maximum size of a single BroadcastChannel message?",
+    "all": ["1\\s?MiB|1\\s?MB"]
+  },
+  {
+    "id": "q3",
+    "text": "How many MB can localStorage hold per origin?",
+    "all": ["5\\s?(MiB|MB)"]
+  },
+  {
+    "id": "q4",
+    "text": "Can the ignoreVary option of CacheStorage.match() make it ignore the Vary header?",
+    "all": ["(?i)(ignored|not honou?red|has no effect|doesn't work|does not work|cannot|can't)"]
+  },
+  {
+    "id": "q5",
+    "text": "Which property should a keydown handler use to tell which key was pressed?",
+    "all": ["(?i)\\b(key|code)\\b", "(?is)keyCode.{0,120}(deprecated|avoid|don't use|do not use)|(deprecated|avoid).{0,120}keyCode"]
+  },
+  {
+    "id": "q6",
+    "text": "List every Navigator property and method that is deprecated in this bundle.",
+    "recall": ["activeVRDisplays", "doNotTrack", "getUserMedia", "getVRDisplays", "sendBeacon"]
+  }
+]
