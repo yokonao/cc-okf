@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Claude Code ships almost daily and the hooks module API is early access.
+  schedule:
+    - cron: '17 21 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +16,12 @@ jobs:
   plugin:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest version the README promises, and whatever is current.
+        claude-code: ['2.1.316', latest]
+    name: plugin (Claude Code ${{ matrix.claude-code }})
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -19,7 +29,31 @@ jobs:
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
-      # The hooks module API is early access; pin the version the plugin was checked against.
-      - run: npm install -g @anthropic-ai/claude-code@2.1.316
+      - run: npm install -g @anthropic-ai/claude-code@${{ matrix.claude-code }}
+      - run: claude --version
       - run: claude plugin validate .
       - run: claude plugin test .
+
+  report:
+    needs: plugin
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open or update the issue for a failing scheduled run
+        run: |
+          version=$(npm view @anthropic-ai/claude-code version)
+          title="Scheduled CI fails with Claude Code $version"
+          body="The scheduled run failed: $RUN_URL"
+          existing=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
