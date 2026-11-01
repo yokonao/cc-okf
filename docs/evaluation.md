@@ -63,6 +63,10 @@ How the result came out:
 - Three `CLAUDE.md` runs had been cut off by a usage limit and were run again.
 - The `ignoreVary` rubric was changed to "mentions `ignoreVary` as a platform-specific limitation" and checked against all six answers by hand.
 
+## Subagents get the table of contents (2026-11-01, n=1)
+
+In an interactive Claude Code 2.1.316 session with cc-okf and one bundle, a `general-purpose` subagent (Haiku) spawned with the `Agent` tool was asked, with no tools, whether its context held the block. It quoted the preamble line, listed the bundle's `## kakeibo` header and named the `okfBundles` block. So `prompt.context` runs for a subagent's conversation too. This checks that the block arrives, not that a subagent opens the bundle on an implicit request.
+
 ## Scan cost (2026-10-31)
 
 Adding a 1,000-concept synthetic bundle (about 2 MB) did not change the time of `claude -p "/okf"`. `scripts/inspect.ts` scans 1,018 concepts in 49 ms and the MDN bundle (8,111 concepts, 48 MB) in about 0.4–1.2 s; three small bundles make a table of contents of about 740 tokens.
@@ -71,3 +75,4 @@ Adding a 1,000-concept synthetic bundle (about 2 MB) did not change the time of 
 
 - More runs, other bundles, other models (Sonnet, Haiku) for the requests that never mention the bundle.
 - A long session with several requests, where the table of contents is paid once.
+- The implicit requests run inside a subagent, to see whether it opens the bundle as the main loop does.
