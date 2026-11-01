@@ -96,6 +96,39 @@ A smoke run of the suite prepared for [#14](https://github.com/yokonao/cc-okf/is
 - Requests saying "our docs site" or "show the user's position" sent Haiku searching the author's repositories or calling macOS location services; they now ask for browser code.
 - Haiku opened the bundle in 2/20 sessions under `okf` and 16/20 under `okfhint`. When it did open the bundle on the clipboard and geolocation requests, it read the interface page and missed the edited method page.
 
+## Lookup line, with a static table of contents (2026-11-02, Opus, n=10)
+
+The suite for [#14](https://github.com/yokonao/cc-okf/issues/14) at n=10 (800 sessions, Opus 5.5, Claude Code 2.1.316). The machine seated `cc-plugin-sec-default`, which skips cc-okf's `prompt.context` hook, so `okf` and `okfhint` were replaced by `static` and `statichint`: cc-okf installed, with the output of `scripts/inspect.ts` at 4,000 tokens inlined in the project `CLAUDE.md`, and `statichint` adding the lookup line. The table of contents is inlined because `claude -p` skips a project import of a file outside the project, which needs approval.
+
+| Condition | Opened | Followed the counterfactual (10 × 10) | Avg turns | Avg cost |
+| --- | --- | --- | --- | --- |
+| No hint | 0/200 | 10/100 | 2.00 | $0.254 |
+| `CLAUDE.md`, 4 lines | 158/200 | 77/100 | 4.63 | $0.341 |
+| static | 136/200 | 78/100 | 3.89 | $0.374 |
+| static + lookup line | 150/200 | 86/100 | 4.18 | $0.379 |
+
+| Kind | `CLAUDE.md` opened | static opened | static + line opened |
+| --- | --- | --- | --- |
+| counterfactual | 88/100 | 93/100 | 100/100 |
+| related | 48/50 | 43/50 | 50/50 |
+| unrelated | 22/50 | 0/50 | 0/50 |
+
+| Comparison | Opened | Correct | Turns | Cost |
+| --- | --- | --- | --- | --- |
+| line − static | +0.07 (0.002) | +0.08 (0.24) | +0.29 (0.09) | +$0.005 (0.47) |
+| static − `CLAUDE.md` | −0.11 (0.002) | +0.01 (1.00) | −0.74 (0.002) | +$0.033 (0.002) |
+| line − `CLAUDE.md` | −0.04 (0.45) | +0.09 (0.22) | −0.45 (0.004) | +$0.038 (0.002) |
+
+Holm p in brackets, over 20 rows.
+
+- The issue's rule for making the line the default was met. It opened none of the 50 unrelated requests and raised counterfactual answers from 78/100 to 86/100, though not significantly. Most of the gain is the Copy button request (`clipboard.writeText`, 8/10 against 3/10); `ignoreVary` went from 9/10 to 10/10.
+- The line cost 0.29 turns and no measurable money; on related requests about 0.6 turns and $0.02. The preamble now carries it, so `okf` and `static` include it and `okfhint` and `statichint` repeat it.
+- The table of contents keeps Claude off unrelated requests: the four `CLAUDE.md` lines opened the bundle on 22 of 50.
+- The static table of contents took 0.74 fewer turns than the `CLAUDE.md` lines but cost $0.033 more per one-shot session: it adds about 9.5k cache-write tokens to every session, while the lines' extra lookups are mostly cheap cache reads.
+- `rootMargin` clamped to 100px: every condition opened the bundle 10/10 but followed the edit 0–3/10. The edit is on the `IntersectionObserver()` constructor page, and sessions read `intersectionobserver/rootmargin.md`, which is not edited. Haiku missed the clipboard and geolocation edits the same way.
+- Costs are about five times those of the n=10 run above (`none` $0.254 against $0.045), from a larger global `CLAUDE.md` and MCP tool list on this machine. Compare conditions, not absolute costs.
+- 84 sessions failed with an authentication error during a 30-minute outage and were run again; none hit a usage limit.
+
 ## Subagents get the table of contents (2026-11-01, n=1)
 
 In an interactive Claude Code 2.1.316 session with cc-okf and one bundle, a `general-purpose` subagent (Haiku) spawned with the `Agent` tool was asked, with no tools, whether its context held the block. It quoted the preamble line, listed the bundle's `## kakeibo` header and named the `okfBundles` block. So `prompt.context` runs for a subagent's conversation too. This checks that the block arrives, not that a subagent opens the bundle on an implicit request.
@@ -106,7 +139,7 @@ Adding a 1,000-concept synthetic bundle (about 2 MB) did not change the time of 
 
 ## Next
 
-- Whether cc-okf should tell Claude to look requests up in the bundles: a 20-request, four-condition suite is ready ([#14](https://github.com/yokonao/cc-okf/issues/14)).
+- The lookup line delivered by the hook rather than a static `CLAUDE.md`, on a machine without `cc-plugin-sec-default`.
 - Other bundles.
-- A long session with several requests, where the table of contents is paid once.
+- A long session with several requests, where the table of contents is paid once and may cost less than the `CLAUDE.md` lines' lookups.
 - The implicit requests run inside a subagent, to see whether it opens the bundle as the main loop does.

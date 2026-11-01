@@ -61,7 +61,7 @@ def test(metric, a, b):
     return observed, boots[int(0.025 * iters)], boots[int(0.975 * iters)], (extreme + 1) / (iters + 1), len(cells), n
 
 
-ORDER = ["none", "claudemd", "okf", "okfhint"]
+ORDER = ["none", "claudemd", "okf", "okfhint", "static", "statichint"]
 conds = sorted({c for _, c in runs}, key=ORDER.index)
 kinds = list(dict.fromkeys(q.get("kind", "") for q in questions.values()))
 print("| Condition | Runs | Opened | Correct | Avg turns | Avg cost |")
@@ -81,7 +81,9 @@ if len(kinds) > 1:
         print(f"| {k} | " + " | ".join(f"{sum(x):.0f}/{len(x)}" for x in cells) + " |")
 
 rows = []
-for a, b in (("claudemd", "okf"), ("okf", "okfhint"), ("claudemd", "okfhint"), ("none", "okf"), ("none", "claudemd")):
+PAIRS = (("claudemd", "okf"), ("okf", "okfhint"), ("claudemd", "okfhint"), ("none", "okf"), ("none", "claudemd"),
+         ("none", "static"), ("static", "statichint"), ("claudemd", "static"), ("claudemd", "statichint"))
+for a, b in PAIRS:
     if a in conds and b in conds:
         for metric in ("opened", "correct", "turns", "cost"):
             r = test(metric, a, b)
