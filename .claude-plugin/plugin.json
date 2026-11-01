@@ -13,6 +13,12 @@
       "title": "Table of contents budget (tokens)",
       "description": "Upper bound for the OKF table of contents added to each conversation, across all bundles.",
       "default": 4000
+    },
+    "bundlesDir": {
+      "type": "string",
+      "title": "Bundles directory",
+      "description": "Directory whose subdirectories are OKF bundles. Empty uses $OKF_DIR, then $CLAUDE_CONFIG_DIR/okf, then ~/.claude/okf. A leading ~ means your home directory.",
+      "default": ""
     }
   }
 }
