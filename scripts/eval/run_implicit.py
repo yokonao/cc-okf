@@ -21,6 +21,8 @@ CLAUDE_MD = """## OKF bundles
 - Prefer concepts whose `verified` has a `human:` entry. Say so when relying on one with `status: deprecated` or past its `stale_after`.
 - For `type: Attested Computation`, fill in only the parameters; never rewrite the computation.
 """
+# The installed cc-okf is turned off in every condition so a globally enabled copy cannot add its own bundles.
+ISOLATE = {"enabledPlugins": {"cc-okf@cc-okf": False}}
 OKF_TOUCH = re.compile(r"\.claude/okf|mcp__cc-okf|mdn_api")
 
 for cond in ("none", "claudemd", "okf"):
@@ -33,8 +35,13 @@ def run(job):
     if path.exists():
         return
     cmd = ["claude", "-p", "--output-format", "stream-json", "--verbose", "--allowedTools", *TOOLS]
+    settings = dict(ISOLATE)
     if cond == "okf":
         cmd += ["--plugin-dir", plugin]
+        settings["env"] = {"OKF_DIR": okf_dir}
+    cmd += ["--settings", json.dumps(settings)]
+    if os.environ.get("EVAL_MODEL"):
+        cmd += ["--model", os.environ["EVAL_MODEL"]]
     res = subprocess.run([*cmd, "--", q["text"]], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                          cwd=out / "cwd" / cond)
     tool_uses, result = [], None
@@ -49,7 +56,8 @@ def run(job):
                     tool_uses.append({"name": block["name"], "input": block.get("input", {})})
         if ev.get("type") == "result":
             result = ev
-    if result is None:
+    # A usage limit ends the session with is_error and the limit notice as its result.
+    if result is None or result.get("is_error"):
         (out / f"{path.stem}.err").write_text(res.stdout[-4000:] + res.stderr[-4000:])
         return
     consulted = any(OKF_TOUCH.search(json.dumps(t)) for t in tool_uses)
