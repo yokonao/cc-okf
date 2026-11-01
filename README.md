@@ -30,7 +30,7 @@ At the prompt of a terminal session:
 /plugin install cc-okf --marketplace yokonao/cc-okf
 ```
 
-Requires Claude Code 2.1.316 or later; the plugin is a hooks module, an early-access API.
+Requires Claude Code 2.1.316 or later; the plugin is a hooks module, an early-access API. CI tests it daily against 2.1.316 and the latest release.
 
 ## Add a bundle
 
