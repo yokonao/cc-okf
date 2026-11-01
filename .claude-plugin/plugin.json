@@ -1,6 +1,6 @@
 {
   "name": "cc-okf",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gives Open Knowledge Format (OKF) bundles in ~/.claude/okf the treatment Claude Code gives skills and memory: a table of contents in context, annotated reads, and frontmatter search.",
   "author": {
     "name": "yokonao"
