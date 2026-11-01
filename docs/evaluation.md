@@ -63,6 +63,30 @@ How the result came out:
 - Three `CLAUDE.md` runs had been cut off by a usage limit and were run again.
 - The `ignoreVary` rubric was changed to "mentions `ignoreVary` as a platform-specific limitation" and checked against all six answers by hand.
 
+## Large bundle, requests that never mention it, at scale (2026-11-01, n=10)
+
+The previous experiment again, with ten runs per question and condition (180 sessions, Opus 5.5), to see whether its differences hold. Two changes to the runner: every condition turns off an installed cc-okf, which had otherwise added the table of contents of the author's own bundles to the `none` and `claudemd` conditions; and a session ended by a usage limit is recorded as a failure instead of an answer (118 sessions hit one and were run again). `scripts/eval/stats_implicit.py` compares conditions within each question: p is a permutation test shuffling condition labels within a question, Holm-adjusted over the 12 comparisons.
+
+| Condition | Opened the bundle | Followed the counterfactual (4 × 10) | Avg turns | Avg cost |
+| --- | --- | --- | --- | --- |
+| No hint | 0/60 | 10/40 | 1.0 | $0.045 |
+| `CLAUDE.md`, 4 lines | 60/60 | 39/40 | 5.3 | $0.148 |
+| cc-okf | 48/60 | 34/40 | 3.5 | $0.104 |
+
+| cc-okf − `CLAUDE.md` | Difference | 95% CI | Holm p |
+| --- | --- | --- | --- |
+| Turns | −1.87 | [−2.20, −1.55] | 0.001 |
+| Cost | −$0.044 | [−$0.060, −$0.027] | 0.001 |
+| Opened | −0.20 | [−0.28, −0.12] | 0.001 |
+| Followed the counterfactual | −0.12 | [−0.23, −0.02] | 0.10 |
+
+- The saving is real: cc-okf took 35% fewer turns and cost 30% less than the `CLAUDE.md` lines, and did so on each of the six questions.
+- The accuracy edge from n=2 did not hold. cc-okf followed the counterfactual less often, though not significantly. Its misses were on the `ignoreVary` request (6/10, against 10/10): all four wrong answers came from sessions that never opened the bundle, so the table of contents did not suggest that a service worker caching question touches `CacheStorage.match()`. The two `BroadcastChannel` misses opened the stale note but not the newer guide.
+- cc-okf skipped the bundle on the unrelated key handler half the time, and on the beacon request three times in ten, where general knowledge gave the right answer anyway.
+- Both hints beat no hint on every measure (Holm p 0.001).
+- The answers were in Japanese because of the author's global `CLAUDE.md`. The `ignoreVary` rubric now accepts the Japanese wording; four answers changed to correct after reading them.
+- Six questions on one bundle, so the tests generalise over runs, not over requests or bundles.
+
 ## Subagents get the table of contents (2026-11-01, n=1)
 
 In an interactive Claude Code 2.1.316 session with cc-okf and one bundle, a `general-purpose` subagent (Haiku) spawned with the `Agent` tool was asked, with no tools, whether its context held the block. It quoted the preamble line, listed the bundle's `## kakeibo` header and named the `okfBundles` block. So `prompt.context` runs for a subagent's conversation too. This checks that the block arrives, not that a subagent opens the bundle on an implicit request.
@@ -73,6 +97,7 @@ Adding a 1,000-concept synthetic bundle (about 2 MB) did not change the time of 
 
 ## Next
 
-- More runs, other bundles, other models (Sonnet, Haiku) for the requests that never mention the bundle.
+- More requests and other bundles for the requests that never mention the bundle, so a test can generalise over requests; other models (Sonnet, Haiku).
+- Requests whose wording is far from the concept they need, like the `ignoreVary` one, to see when the table of contents fails to suggest a lookup.
 - A long session with several requests, where the table of contents is paid once.
 - The implicit requests run inside a subagent, to see whether it opens the bundle as the main loop does.
