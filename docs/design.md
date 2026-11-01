@@ -37,7 +37,7 @@ cc-okf makes Open Knowledge Format (OKF) bundles behave in Claude Code the way s
 
 **One language, no CLI.** The plugin is a TypeScript hooks module alone, so installing it is one `/plugin install` line. A hooks module imports only files inside the plugin, so js-yaml 4.1.0 is vendored; it parses with the core schema so timestamps stay strings.
 
-**Bundles live in `~/.claude/okf/<name>/`**, mirroring `~/.claude/skills/<name>/`. A link to a directory counts. There is no project scope yet.
+**Bundles live in `~/.claude/okf/<name>/` by default**, mirroring `~/.claude/skills/<name>/`. A link to a directory counts. OKF is not tied to one tool, so the `bundlesDir` option or `$OKF_DIR` can point elsewhere (say `~/.okf`), where other agents can read the same bundles. There is no project scope yet.
 
 **Read-only.** Writing and curating bundles is the producers' job. cc-okf only keeps its own view fresh after an edit.
 

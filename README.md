@@ -34,7 +34,7 @@ Requires Claude Code 2.1.316 or later; the plugin is a hooks module, an early-ac
 
 ## Add a bundle
 
-A bundle is any directory, or link to one, directly under `~/.claude/okf/` (`$CLAUDE_CONFIG_DIR/okf/` when that is set). Its directory name is the bundle's name.
+A bundle is any directory, or link to one, directly under the bundles directory, `~/.claude/okf/` by default. Its directory name is the bundle's name. To keep bundles elsewhere, set the `bundlesDir` option or the `OKF_DIR` environment variable (for example in the `env` block of `~/.claude/settings.json`); without either, `$CLAUDE_CONFIG_DIR/okf/` is used when that is set. A leading `~` means your home directory.
 
 ```sh
 git clone https://github.com/GoogleCloudPlatform/open-knowledge-format /tmp/okf
@@ -49,6 +49,7 @@ A bundle added during a session shows up in tools and `/okf` at once, and in the
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `tocBudgetTokens` | 4000 | Upper bound for the table of contents across all bundles. |
+| `bundlesDir` | empty | The bundles directory. Empty falls back to `$OKF_DIR`, `$CLAUDE_CONFIG_DIR/okf`, then `~/.claude/okf`. |
 
 Set it in `/config`, or under `pluginConfigs` in `~/.claude/settings.json`.
 

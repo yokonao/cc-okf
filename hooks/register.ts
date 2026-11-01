@@ -1,6 +1,6 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { type Bundle, type ConceptCache, type FsLike, discoverBundles, scanBundle } from '../lib/bundle.ts'
-import { join, relativeTo } from '../lib/paths.ts'
+import { join, normalize, relativeTo } from '../lib/paths.ts'
 import {
   indexBody,
   renderBundles,
@@ -26,6 +26,7 @@ const cache: ConceptCache = new Map()
 let last: Scan | undefined
 let isDirty = true
 let inflight: Promise<Scan> | undefined
+let bundlesDir = ''
 const TOLD_INDEX = 'told-index'
 
 function fsOf($: EngineInterface): FsLike {
@@ -37,10 +38,14 @@ function fsOf($: EngineInterface): FsLike {
   }
 }
 
+/** Where bundles live: the `bundlesDir` option, then `$OKF_DIR`, then `$CLAUDE_CONFIG_DIR/okf`, then `~/.claude/okf`. */
 async function okfDir($: EngineInterface): Promise<string> {
+  const home = (await $.env.get('HOME')) ?? '/'
+  const expand = (p: string) => (p === '~' || p.startsWith('~/') ? join(home, p.slice(1)) : normalize(p))
+  const configured = bundlesDir || (await $.env.get('OKF_DIR'))
+  if (configured) return expand(configured)
   const configDir = await $.env.get('CLAUDE_CONFIG_DIR')
-  if (configDir) return join(configDir, 'okf')
-  return join((await $.env.get('HOME')) ?? '/', '.claude', 'okf')
+  return configDir ? join(expand(configDir), 'okf') : join(home, '.claude', 'okf')
 }
 
 async function scan($: EngineInterface, force = false): Promise<Scan> {
@@ -136,6 +141,7 @@ const INDEX_SCHEMA = {
 
 export const register: Register = (on, options) => {
   const budget = typeof options.tocBudgetTokens === 'number' ? options.tocBudgetTokens : 4000
+  bundlesDir = typeof options.bundlesDir === 'string' ? options.bundlesDir.trim() : ''
 
   on('session.start', async ($, e, next) => {
     await $.tool.register({
