@@ -46,6 +46,32 @@ A bundle added during a session shows up in tools and `/okf` at once, and in the
 
 The table of contents shows each bundle's root `index.md`, so that file decides when Claude thinks to look. Write it to say which questions the bundle answers, close to leaf level, rather than only listing subdirectories.
 
+## Managed machines and Team/Enterprise plans
+
+On a machine with managed settings or a `managed-mcp.json`, or on a Team or Enterprise plan, Claude Code seats its built-in guard `cc-plugin-sec-default` first. The guard sends `prompt.context` on past user-installed plugins, so the table of contents never reaches the session. `--settings`, `enabledPlugins` and `--plugin-dir` cannot change this; only managed settings can.
+
+Everything else keeps working: `okf_search` and `okf_index` are registered, and a `Read` inside a bundle still gets its note. The only sign is this line at session start:
+
+```
+cc-okf: its prompt.context hook was skipped. "cc-plugin-sec-default" runs first and sent the event on past it.
+```
+
+As a fallback, keep cc-okf installed, render the table of contents to a file from a checkout of this repository, and import it from `~/.claude/CLAUDE.md`, which Claude Code loads itself:
+
+```sh
+bun scripts/inspect.ts ~/.claude/okf 4000 > ~/.claude/okf-toc.md
+```
+
+```md
+@~/.claude/okf-toc.md
+```
+
+- The file holds the same preamble and per-bundle sections as the hook. Its lines about `Read` notes and the MCP tools stay true while the plugin is installed.
+- It goes stale. Run the command again after adding or editing concepts; trust and staleness counts are as of the last run.
+- A bundle with a hand-written root `index.md` can be imported directly instead (`@~/.claude/okf/<name>/index.md`). That drops the preamble and the token budget, so it suits small bundles.
+
+This is a fallback, not an equivalent. Whether it matches the hook in lookups, turns and cost is not measured; the `claudemd` condition in [docs/evaluation.md](docs/evaluation.md) has no table of contents.
+
 ## Options
 
 | Option | Default | Meaning |
