@@ -3,7 +3,9 @@
     python3 scripts/eval/run_implicit.py <plugin dir> <okf dir> <out dir> [reps] [parallel]
 
 Conditions: none (no plugin), claudemd (a project CLAUDE.md pointing at the bundles), okf (the plugin),
-okfhint (the plugin plus a one-line project CLAUDE.md telling Claude to look requests up in the bundles).
+okfhint (the plugin plus a one-line project CLAUDE.md telling Claude to look requests up in the bundles),
+static and statichint (okf and okfhint with the table of contents from scripts/inspect.ts inlined in the project
+CLAUDE.md, for machines where cc-plugin-sec-default skips the plugin's prompt.context hook).
 Each run gets its own empty directory outside the bundle's source tree, and cannot write files, so a coding
 request leaves nothing for a later run to explore.
 """
@@ -29,6 +31,13 @@ ISOLATE = {"enabledPlugins": {"cc-okf@cc-okf": False}}
 OKF_TOUCH = re.compile(r"\.claude/okf|mcp__cc-okf|mdn_api")
 
 PROJECT_MD = {"claudemd": CLAUDE_MD, "okfhint": HINT_MD}
+conds = os.environ.get("EVAL_CONDITIONS", "none,claudemd,okf").split(",")
+if {"static", "statichint"} & set(conds):
+    # Inlined: claude -p skips an @-import from outside the project because it needs approval.
+    toc = subprocess.run(["bun", f"{plugin}/scripts/inspect.ts", okf_dir, "4000"], capture_output=True, text=True,
+                         check=True).stdout
+    PROJECT_MD |= {"static": toc, "statichint": toc + "\n" + HINT_MD}
+PLUGIN_CONDS = ("okf", "okfhint", "static", "statichint")
 
 def run(job):
     q, cond, rep = job
@@ -42,7 +51,7 @@ def run(job):
     cmd = ["claude", "-p", "--output-format", "stream-json", "--verbose", "--allowedTools", *TOOLS,
            "--disallowedTools", "Write", "Edit", "NotebookEdit"]
     settings = dict(ISOLATE)
-    if cond in ("okf", "okfhint"):
+    if cond in PLUGIN_CONDS:
         cmd += ["--plugin-dir", plugin]
         settings["env"] = {"OKF_DIR": okf_dir}
     cmd += ["--settings", json.dumps(settings)]
@@ -71,7 +80,6 @@ def run(job):
                                 "total_cost_usd": result.get("total_cost_usd"), "consulted": consulted,
                                 "tool_uses": tool_uses}, ensure_ascii=False))
 
-conds = os.environ.get("EVAL_CONDITIONS", "none,claudemd,okf").split(",")
 jobs = [(q, c, r) for r in range(reps) for q in questions for c in conds]
 with ThreadPoolExecutor(parallel) as pool:
     list(pool.map(run, jobs))

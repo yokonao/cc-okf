@@ -29,6 +29,8 @@ cc-okf makes Open Knowledge Format (OKF) bundles behave in Claude Code the way s
 
 **The table of contents is data, not instructions.** It goes in its own context block rather than among the `claudeMd` instruction files, which the engine frames as instructions to follow. A bundle can come from anywhere, so the block opens by saying its content is reference data.
 
+**The preamble tells Claude to look requests up.** Without it, Opus skipped the bundle on some requests worded far from the concept they needed. With it, counterfactual answers rose from 78/100 to 86/100 and no unrelated request opened the bundle; it cost about 0.3 turns per session (see evaluation).
+
 **Reads are the main path, not tools.** Claude already reads files well, and other OKF integrations reported that skills plus `Read` were enough. cc-okf adds only what `Read` and `Grep` cannot give: the trust tier and staleness computed from frontmatter, bundle-relative links (`/tables/orders.md`) resolved to real paths, and backlinks. The two tools cover filtering by frontmatter and directory listings with flags.
 
 **Tools are deferred behind ToolSearch.** Listing them in the prompt changed the tool list and missed the prompt cache shared across sessions; deferred, the per-session cost fell below the baseline in evaluation.
