@@ -109,19 +109,22 @@ test('a store that refuses the snapshot still leaves the table of contents in pl
   expect((await $.prompt.submit({ ...TYPED, text: 'hi' })).context).toBeUndefined()
 })
 
-function home(on: On, env: Record<string, string>) {
-  const fs = memfs({ files: shopTree('/home/u/.okf/shop') })
+function home(on: On, env: Record<string, string>, links: Record<string, string> = {}, canList = true) {
+  const fs = memfs({ files: shopTree('/home/u/.okf/shop'), links })
   mock.env(on, { HOME: '/home/u', ...env })
   mock.clock(on, { now: NOW })
   mock.store(on, {})
   on('session.id', () => ({ value: 's1' }))
   on('fs.exists', async (_, e) => ({ value: await fs.exists(e.path) }))
-  on('fs.list', async (_, e) => ({ value: (await fs.list(e.path)).map(entry => ({ ...entry, size: 0 })) }))
+  on('fs.list', async (_, e) =>
+    canList ? { value: (await fs.list(e.path)).map(entry => ({ ...entry, size: 0 })) } : { deny: 'EACCES' },
+  )
   on('fs.read', async (_, e) => ({ value: await fs.read(e.path) }))
   on('fs.stat', async (_, e) => ({ value: { size: 0, isLink: false, ...(await fs.stat(e.path)) } }))
   on('tool.register', (_, e) => ({ value: { tool: `mcp__cc-okf__${e.name}` } }))
   on('command.register', () => ({ value: { command: 'okf' } }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('prompt.context', (_, e) => ({ blocks: e.blocks }))
 }
 
 test('the bundlesDir option moves where bundles are read, ~ meaning home', { options: { bundlesDir: '~/.okf' } }, async ($, on) => {
@@ -137,4 +140,17 @@ test('OKF_DIR applies when the option is empty', async ($, on) => {
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: false })
   const listed = await $.tool.call({ tool: 'mcp__cc-okf__okf_index' })
   expect(String(listed.result)).toContain('OKF 0.2 — /home/u/.okf/shop')
+})
+
+test('a table of contents still comes when the bundles directory cannot be listed', async ($, on) => {
+  home(on, { OKF_DIR: '~/.okf' }, {}, false)
+  const result = await $.prompt.context({ blocks: [{ name: 'currentDate', text: 'today' }] })
+  expect(result.blocks.map(b => b.name)).toEqual(['currentDate'])
+})
+
+test('a bundle with a dangling link still reaches the table of contents', async ($, on) => {
+  home(on, { OKF_DIR: '~/.okf' }, { '/home/u/.okf/shop/dangling': '/nonexistent' })
+  const result = await $.prompt.context({ blocks: [] })
+  expect(result.blocks.find(b => b.name === 'okfBundles')?.text).toContain('## shop\nPath: /home/u/.okf/shop · 6 concepts')
+  expect(result.blocks.find(b => b.name === 'okfBundles')?.text).toContain('1 entry skipped')
 })
