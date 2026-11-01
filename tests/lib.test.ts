@@ -112,6 +112,14 @@ describe('scan survives bad entries', () => {
     expect(b.skipped[1]!.reason).toMatch(/already walked/)
   })
 
+  test('a directory link leaving the bundle is not followed', async () => {
+    const files = { ...shopTree(ROOT), '/home/u/diary.md': '---\ntype: Note\n---\nprivate\n' }
+    const b = await scanBundle(memfs({ files, links: { [`${ROOT}/notes`]: '/home/u' } }), 'shop', ROOT, new Map())
+    expect(b.concepts.size).toBe(6)
+    expect(b.dirs.has('notes')).toBe(false)
+    expect(b.skipped).toEqual([{ rel: 'notes', reason: 'links to /home/u, outside the bundle' }])
+  })
+
   test('a dangling link among bundles is not a bundle', async () => {
     const fs = memfs({ files: shopTree('/okf/shop'), links: { '/okf/gone': '/nonexistent' } })
     expect(await discoverBundles(fs, '/okf')).toEqual([{ name: 'shop', root: '/okf/shop' }])

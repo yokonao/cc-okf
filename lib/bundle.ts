@@ -1,5 +1,5 @@
 import { parseFrontmatter } from './frontmatter.ts'
-import { basename, dirname, join, normalize } from './paths.ts'
+import { basename, dirname, join, normalize, relativeTo } from './paths.ts'
 import { type TrustTier, type Verification, trustTier, verifications } from './trust.ts'
 
 export type FsKind = 'file' | 'dir' | 'other'
@@ -134,6 +134,7 @@ export async function scanBundle(
 
     if (kind === 'dir') {
       if (SKIPPED_DIRS.has(entry.name)) return
+      if (relativeTo(realRoot, realPath) === undefined) throw new Error(`links to ${realPath}, outside the bundle`)
       if (walked.has(realPath)) throw new Error(`${realPath} is already walked through another path`)
       walked.add(realPath)
       bundle.dirs.add(rel)
