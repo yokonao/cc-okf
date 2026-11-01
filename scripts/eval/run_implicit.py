@@ -56,7 +56,8 @@ def run(job):
                     tool_uses.append({"name": block["name"], "input": block.get("input", {})})
         if ev.get("type") == "result":
             result = ev
-    if result is None:
+    # A usage limit ends the session with is_error and the limit notice as its result.
+    if result is None or result.get("is_error"):
         (out / f"{path.stem}.err").write_text(res.stdout[-4000:] + res.stderr[-4000:])
         return
     consulted = any(OKF_TOUCH.search(json.dumps(t)) for t in tool_uses)
