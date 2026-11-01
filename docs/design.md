@@ -20,7 +20,7 @@ cc-okf makes Open Knowledge Format (OKF) bundles behave in Claude Code the way s
 | `tool.call` on `Read` | Appends a note after a concept's content: trust tier, status, staleness, resolved links, backlinks, and for an Attested Computation the rule to supply only its parameters. The result itself is left as is, so line numbers and `Edit` keep working. |
 | `tool.call` on `Write` / `Edit` | Marks the scan stale when a bundle file changes. |
 | `$.tool.register` | `okf_search` and `okf_index`, deferred behind ToolSearch (see below). |
-| `prompt.submit` | Compares the bundles with what this session was last told and attaches a change note. |
+| `prompt.submit` | Compares the bundles with what this session was last told and attaches a change note. Rescans at most every 30 seconds unless Claude wrote into a bundle, since a bundle the size of MDN takes about a second to list. |
 | `prompt.mention`, `prompt.autocomplete` | Resolve and complete `@okf:` mentions. |
 | `$.command.register` | `/okf`. |
 | `$.store` | The per-session baseline for change notes. |

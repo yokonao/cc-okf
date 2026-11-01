@@ -15,10 +15,11 @@ function engine(
   mtimeMs: Record<string, number> = {},
   store: Record<string, unknown> | 'refuse' = {},
   sessionId = 's1',
+  clock = { now: NOW },
 ) {
   const fs = memfs({ files, mtimeMs, links: { [ROOT]: '/data/shop' } })
   mock.env(on, { HOME: '/home/u' })
-  mock.clock(on, { now: NOW })
+  on('clock.now', () => ({ value: clock.now }))
   if (store === 'refuse') {
     on('store.get', () => ({ value: undefined }))
     on('store.set', () => ({ deny: 'too large' }))
@@ -71,12 +72,16 @@ test('okf_search and okf_index answer from the scanned bundle', async ($, on) =>
 test('a prompt after the bundle changed carries a change note, once', async ($, on) => {
   const files = shopTree('/data/shop')
   const mtimeMs: Record<string, number> = {}
-  engine(on, files, mtimeMs)
+  const clock = { now: NOW }
+  engine(on, files, mtimeMs, {}, 's1', clock)
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: false })
 
   expect((await $.prompt.submit({ ...TYPED, text: 'first' })).context).toBeUndefined()
   files['/data/shop/metrics/margin.md'] = '---\ntype: Metric\n---\n'
   mtimeMs['/data/shop/log.md'] = 9
+  // Within the rescan interval the change waits for a later prompt.
+  expect((await $.prompt.submit({ ...TYPED, text: 'soon after' })).context).toBeUndefined()
+  clock.now += 30_000
   const second = await $.prompt.submit({ ...TYPED, text: 'second' })
   expect(second.context?.join('\n')).toContain('added: metrics/margin')
   expect(second.context?.join('\n')).toContain('newest entry of /log.md:\n    ## 2026-07-01')

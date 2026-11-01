@@ -44,6 +44,8 @@ cp -R /tmp/okf/bundles/acme_retail ~/.claude/okf/
 
 A bundle added during a session shows up in tools and `/okf` at once, and in the table of contents from the next conversation.
 
+The table of contents shows each bundle's root `index.md`, so that file decides when Claude thinks to look. Write it to say which questions the bundle answers, close to leaf level, rather than only listing subdirectories.
+
 ## Options
 
 | Option | Default | Meaning |
