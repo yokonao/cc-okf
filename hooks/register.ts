@@ -18,6 +18,8 @@ import { TRUST_TIERS, type TrustTier } from '../lib/trust.ts'
 const CONTEXT_BLOCK = 'okfBundles'
 const CHARS_PER_TOKEN = 4
 const RESCAN_AFTER_MS = 2000
+// A prompt rescans for the change note; a bundle as large as MDN takes about a second to list.
+const PROMPT_RESCAN_AFTER_MS = 30_000
 
 type Scan = { okfDir: string; bundles: Bundle[]; rootIndexes: Map<string, string | undefined>; at: number }
 
@@ -48,9 +50,9 @@ async function okfDir($: EngineInterface): Promise<string> {
   return configDir ? join(expand(configDir), 'okf') : join(home, '.claude', 'okf')
 }
 
-async function scan($: EngineInterface, force = false): Promise<Scan> {
+async function scan($: EngineInterface, maxAgeMs = RESCAN_AFTER_MS): Promise<Scan> {
   const now = await $.clock.now()
-  if (!force && !isDirty && last !== undefined && now - last.at < RESCAN_AFTER_MS) return last
+  if (!isDirty && last !== undefined && now - last.at < maxAgeMs) return last
   inflight ??= (async () => {
     try {
       const fs = fsOf($)
@@ -177,7 +179,7 @@ export const register: Register = (on, options) => {
 
   on('prompt.submit', async ($, e, next) => {
     if (e.command !== undefined || e.isMeta === true) return next(e)
-    const { bundles } = await scan($, true)
+    const { bundles } = await scan($, PROMPT_RESCAN_AFTER_MS)
     const was = await readTold($)
     await writeTold($, bundles)
     if (was === undefined) return next(e)
@@ -266,7 +268,7 @@ export const register: Register = (on, options) => {
   }).catch(() => ({ deny: 'cc-okf: okf_index failed; Read the index.md files instead.' }))
 
   on('command.run', { command: 'okf' }, async ($, e) => {
-    const { okfDir: dir, bundles } = await scan($, e.args.trim() === 'rescan')
+    const { okfDir: dir, bundles } = await scan($, e.args.trim() === 'rescan' ? 0 : RESCAN_AFTER_MS)
     return { text: renderBundles(bundles, dir, await $.clock.now()) }
   })
 }
