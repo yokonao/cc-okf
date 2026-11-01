@@ -139,6 +139,12 @@ EDITS = {
     "c2-broadcastchannel": "broadcastchannel/postmessage claims a 64 KiB limit and is stale; a newer human-reviewed guide says 1 MiB and links to it",
     "c3-localstorage": "window/localstorage claims a 10 MB quota and is unverified; a human-reviewed guide says 5 MiB",
     "c4-cachestorage": "cachestorage/match says ignoreVary is ignored on this platform (real web: honoured)",
+    "c5-intersectionobserver": "the IntersectionObserver constructor clamps rootMargin to 100px on this platform",
+    "c6-clipboard": "clipboard/writetext is deprecated here in favour of clipboard.write() with a ClipboardItem",
+    "c7-geolocation": "getCurrentPosition fails at once when timeout exceeds 10000 ms on this platform",
+    "c8-websocket": "a human-reviewed guide, linking to websocket, says the proxy closes WebSockets idle for 45 seconds",
+    "c9-indexeddb": "indexeddb_api claims a 50 MB quota and is unverified; the human-reviewed storage guide says 200 MiB",
+    "c10-fullscreen": "element/requestfullscreen rejects on this platform unless navigationUI is \"hide\"",
 }
 
 
@@ -192,7 +198,8 @@ def counterfactuals(out):
             "verified": "{ by: human:platform-team, at: 2026-08-01T00:00:00Z }",
         },
         "\n`localStorage` holds at most 5 MiB per origin on every browser we support; "
-        "see [Window.localStorage](/window/localstorage.md).\n",
+        "see [Window.localStorage](/window/localstorage.md). "
+        "[IndexedDB](/indexeddb_api.md) holds at most 200 MiB per origin.\n",
     )
     edit(
         out,
@@ -201,10 +208,61 @@ def counterfactuals(out):
         body_prefix="\n> [!WARNING]\n> On our platform the `ignoreVary` option is ignored by `CacheStorage.match()`; "
         "filter on the `Vary` header yourself.\n",
     )
+    edit(
+        out,
+        "intersectionobserver/intersectionobserver",
+        {"verified": "{ by: human:platform-team, at: 2026-09-01T00:00:00Z }"},
+        body_prefix="\n> [!WARNING]\n> On our platform `rootMargin` is clamped to at most `100px` on each side; "
+        "a larger margin behaves as `100px`. Lower `threshold` or observe a sentinel element placed further ahead instead.\n",
+    )
+    edit(
+        out,
+        "clipboard/writetext",
+        {"status": "deprecated", "verified": "{ by: human:platform-team, at: 2026-09-01T00:00:00Z }"},
+        body_prefix="\n> [!WARNING]\n> Deprecated in our platform baseline (2026-09): `writeText()` fails in our embedded WebView. "
+        "Use [`write()`](/clipboard/write.md) with a [`ClipboardItem`](/clipboarditem.md) holding a `text/plain` blob instead.\n",
+    )
+    edit(
+        out,
+        "geolocation/getcurrentposition",
+        {"verified": "{ by: human:platform-team, at: 2026-09-01T00:00:00Z }"},
+        body_prefix="\n> [!WARNING]\n> On our platform a `timeout` above `10000` ms makes the call fail at once with `TIMEOUT`. "
+        "Keep `timeout` at 10000 ms or less and retry instead.\n",
+    )
+    write_concept(
+        out,
+        "guides/network-limits",
+        {
+            "type": "Guide",
+            "title": "Network limits on our platform",
+            "description": "Connection limits that our edge proxy enforces.",
+            "tags": ["platform", "network"],
+            "status": "stable",
+            "generated": "{ by: human:platform-team, at: 2026-09-01T00:00:00Z }",
+            "verified": "{ by: human:platform-team, at: 2026-09-01T00:00:00Z }",
+        },
+        "\nOur edge proxy closes a [WebSocket](/websocket.md) connection that carries no frame for 45 seconds. "
+        "Long-lived connections must send an application-level heartbeat more often than that.\n",
+    )
+    edit(
+        out,
+        "indexeddb_api",
+        {"generated": "{ by: summarizer_agent/0.3, at: 2026-05-01T00:00:00Z }"},
+        body_suffix="\n## Quota\n\nEach origin may store up to 50 MB in IndexedDB.\n",
+        drop=("verified",),
+    )
+    edit(
+        out,
+        "element/requestfullscreen",
+        {"verified": "{ by: human:platform-team, at: 2026-09-01T00:00:00Z }"},
+        body_prefix="\n> [!WARNING]\n> On our platform `requestFullscreen()` rejects with `TypeError` unless it is called "
+        "with `{ navigationUI: \"hide\" }`.\n",
+    )
     (out / "guides" / "index.md").write_text(
         "# Guides\n\n"
         "* [BroadcastChannel limits on our platform](broadcastchannel-limits.md) - Current BroadcastChannel message size limit.\n"
         "* [Storage quotas on supported browsers](storage-quotas.md) - Per-origin client storage quotas.\n"
+        "* [Network limits on our platform](network-limits.md) - Connection limits of our edge proxy.\n"
     )
     root = out / "index.md"
     root.write_text(root.read_text().replace("# Web APIs\n", "# Web APIs\n\n* [guides](guides/) - Platform guides from the platform team.\n", 1))
@@ -224,7 +282,7 @@ def main():
         for p in (out / "navigator").rglob("*.md")
         if p.name != "index.md" and "\nstatus: \"deprecated\"" in p.read_text() or (p.name != "index.md" and "\nstatus: deprecated" in p.read_text())
     )
-    print(json.dumps({"concepts": len(descriptions) + 2, "edits": EDITS, "navigator_deprecated": deprecated}, indent=2))
+    print(json.dumps({"concepts": len(descriptions) + 3, "edits": EDITS, "navigator_deprecated": deprecated}, indent=2))
 
 
 if __name__ == "__main__":

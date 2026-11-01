@@ -4,7 +4,8 @@
 
 Each difference is the mean over questions of the per-question difference in means, so every question
 weighs the same however many runs it has. p is a two-sided permutation test that shuffles condition labels
-within each question; the interval is a 95% bootstrap that resamples runs within each question and condition.
+within each question; the interval is a 95% bootstrap that resamples runs within each question and condition,
+left out for yes/no metrics, where cells that are all yes or all no make it too narrow.
 p-values are Holm-adjusted across all rows printed.
 """
 import json, random, re, sys
@@ -60,7 +61,9 @@ def test(metric, a, b):
     return observed, boots[int(0.025 * iters)], boots[int(0.975 * iters)], (extreme + 1) / (iters + 1), len(cells), n
 
 
-conds = sorted({c for _, c in runs}, key=["none", "claudemd", "okf"].index)
+ORDER = ["none", "claudemd", "okf", "okfhint"]
+conds = sorted({c for _, c in runs}, key=ORDER.index)
+kinds = list(dict.fromkeys(q.get("kind", "") for q in questions.values()))
 print("| Condition | Runs | Opened | Correct | Avg turns | Avg cost |")
 print("| --- | --- | --- | --- | --- | --- |")
 for c in conds:
@@ -69,8 +72,16 @@ for c in conds:
     print(f"| {c} | {len(rs)} | {sum(r['opened'] for r in rs):.0f}/{len(rs)} | {sum(cor):.0f}/{len(cor)} "
           f"| {mean([r['turns'] for r in rs]):.2f} | ${mean([r['cost'] for r in rs]):.3f} |")
 
+if len(kinds) > 1:
+    print()
+    print("| Kind | " + " | ".join(f"{c} opened" for c in conds) + " |")
+    print("| --- |" + " --- |" * len(conds))
+    for k in kinds:
+        cells = [[r["opened"] for qid, q in questions.items() if q.get("kind", "") == k for r in runs[(qid, c)]] for c in conds]
+        print(f"| {k} | " + " | ".join(f"{sum(x):.0f}/{len(x)}" for x in cells) + " |")
+
 rows = []
-for a, b in (("claudemd", "okf"), ("none", "okf"), ("none", "claudemd")):
+for a, b in (("claudemd", "okf"), ("okf", "okfhint"), ("claudemd", "okfhint"), ("none", "okf"), ("none", "claudemd")):
     if a in conds and b in conds:
         for metric in ("opened", "correct", "turns", "cost"):
             r = test(metric, a, b)
@@ -88,4 +99,5 @@ print("| Comparison | Metric | Difference | 95% CI | p | Holm p | Questions | Ru
 print("| --- | --- | --- | --- | --- | --- | --- | --- |")
 for (cmp, metric, d, lo, hi, p, k, n), padj in zip(rows, adjusted):
     fmt = "{:+.3f}" if metric == "cost" else "{:+.2f}"
-    print(f"| {cmp} | {metric} | {fmt.format(d)} | [{fmt.format(lo)}, {fmt.format(hi)}] | {p:.4f} | {padj:.4f} | {k} | {n} |")
+    ci = "–" if metric in ("opened", "correct") else f"[{fmt.format(lo)}, {fmt.format(hi)}]"
+    print(f"| {cmp} | {metric} | {fmt.format(d)} | {ci} | {p:.4f} | {padj:.4f} | {k} | {n} |")
