@@ -100,6 +100,24 @@ describe('scan', () => {
   })
 })
 
+describe('scan survives bad entries', () => {
+  test('a dangling link, a bare % and a link cycle are skipped, the rest is scanned', async () => {
+    const files = { ...shopTree(ROOT), [`${ROOT}/pct.md`]: '---\ntype: Note\n---\nsee [half](50%.md)\n' }
+    const links = { [`${ROOT}/dangling`]: '/nonexistent', [`${ROOT}/metrics/loop`]: ROOT }
+    const b = await scanBundle(memfs({ files, links }), 'shop', ROOT, new Map())
+    expect(b.concepts.size).toBe(7)
+    expect(resolveLinks(b, b.concepts.get('pct')!)).toEqual([{ raw: '50%.md', exists: false }])
+    expect(b.skipped.map(s => s.rel)).toEqual(['dangling', 'metrics/loop'])
+    expect(b.skipped[0]!.reason).toMatch(/ENOENT/)
+    expect(b.skipped[1]!.reason).toMatch(/already walked/)
+  })
+
+  test('a dangling link among bundles is not a bundle', async () => {
+    const fs = memfs({ files: shopTree('/okf/shop'), links: { '/okf/gone': '/nonexistent' } })
+    expect(await discoverBundles(fs, '/okf')).toEqual([{ name: 'shop', root: '/okf/shop' }])
+  })
+})
+
 describe('search', () => {
   test('all words must match; deprecated is left out unless asked', async () => {
     const b = await shop()

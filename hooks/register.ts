@@ -56,13 +56,16 @@ async function scan($: EngineInterface, force = false): Promise<Scan> {
       const fs = fsOf($)
       const dir = await okfDir($)
       const bundles: Bundle[] = []
+      // One bundle that cannot be scanned is left out; the others still reach the conversation.
       for (const { name, root } of await discoverBundles(fs, dir)) {
-        bundles.push(await scanBundle(fs, name, root, cache))
+        const bundle = await scanBundle(fs, name, root, cache).catch(() => undefined)
+        if (bundle !== undefined) bundles.push(bundle)
       }
       const rootIndexes = new Map<string, string | undefined>()
       for (const b of bundles) {
         const index = b.indexes.get('')
-        rootIndexes.set(b.name, index === undefined ? undefined : indexBody(await fs.read(index)))
+        const text = index === undefined ? undefined : await fs.read(index).then(indexBody, () => undefined)
+        rootIndexes.set(b.name, text)
       }
       isDirty = false
       last = { okfDir: dir, bundles, rootIndexes, at: now }
@@ -170,7 +173,7 @@ export const register: Register = (on, options) => {
     if ((await readTold($)) === undefined) await writeTold($, bundles)
     const text = renderToc(bundles, rootIndexes, dir, budget * CHARS_PER_TOKEN, await $.clock.now())
     return { ...result, blocks: [...result.blocks.filter(b => b.name !== CONTEXT_BLOCK), { name: CONTEXT_BLOCK, text }] }
-  })
+  }).catch(($, e, next) => next(e))
 
   on('prompt.submit', async ($, e, next) => {
     if (e.command !== undefined || e.isMeta === true) return next(e)

@@ -56,6 +56,8 @@ export type Bundle = {
   /** Directory path within the bundle → its log.md. */
   logs: Map<string, { path: string; mtimeMs: number }>
   backlinks: Map<string, string[]>
+  /** Entries the scan could not take in, with why; the rest of the bundle is still scanned. */
+  skipped: { rel: string; reason: string }[]
   isTruncated: boolean
 }
 
@@ -70,7 +72,7 @@ export async function discoverBundles(fs: FsLike, okfDir: string): Promise<{ nam
   for (const entry of await fs.list(okfDir)) {
     if (entry.name.startsWith('.')) continue
     const root = join(okfDir, entry.name)
-    const kind = entry.isLink ? (await fs.stat(root)).kind : entry.kind
+    const kind = entry.isLink ? await fs.stat(root).then(s => s.kind, () => 'other' as const) : entry.kind
     if (kind === 'dir') found.push({ name: entry.name, root })
   }
   return found.sort((a, b) => a.name.localeCompare(b.name))
@@ -83,64 +85,95 @@ export async function scanBundle(
   cache: ConceptCache,
   maxFiles = 20000,
 ): Promise<Bundle> {
+  const realRoot = (await fs.stat(root)).realPath ?? root
   const bundle: Bundle = {
     name,
     root,
-    realRoot: (await fs.stat(root)).realPath ?? root,
+    realRoot,
     concepts: new Map(),
     files: new Set(),
     dirs: new Set(['']),
     indexes: new Map(),
     logs: new Map(),
     backlinks: new Map(),
+    skipped: [],
     isTruncated: false,
   }
+  const skip = (rel: string, error: unknown) =>
+    bundle.skipped.push({ rel, reason: error instanceof Error ? error.message : String(error) })
+  // Real paths of the directories walked, so a link back into the tree is not walked again.
+  const walked = new Set([realRoot])
 
-  const walk = async (dirRel: string): Promise<void> => {
+  const walk = async (dirRel: string, realDir: string): Promise<void> => {
     for (const entry of await fs.list(join(root, dirRel))) {
+      if (bundle.isTruncated) return
       if (entry.name.startsWith('.')) continue
       const rel = dirRel === '' ? entry.name : `${dirRel}/${entry.name}`
-      const path = join(root, rel)
-      let { kind, mtimeMs } = entry
-      if (entry.isLink) ({ kind, mtimeMs } = await fs.stat(path))
-
-      if (kind === 'dir') {
-        if (SKIPPED_DIRS.has(entry.name)) continue
-        bundle.dirs.add(rel)
-        await walk(rel)
-        continue
+      try {
+        await take(entry, dirRel, rel, realDir)
+      } catch (error) {
+        skip(rel, error)
       }
-      if (kind !== 'file') continue
-      if (bundle.files.size >= maxFiles) {
-        bundle.isTruncated = true
-        return
-      }
-      bundle.files.add(rel)
-      if (!rel.endsWith('.md')) continue
-      if (entry.name === 'index.md') {
-        bundle.indexes.set(dirRel, path)
-        continue
-      }
-      if (entry.name === 'log.md') {
-        bundle.logs.set(dirRel, { path, mtimeMs })
-        continue
-      }
-
-      const cached = cache.get(path)
-      const concept =
-        cached !== undefined && cached.mtimeMs === mtimeMs
-          ? cached
-          : parseConcept(rel.slice(0, -'.md'.length), path, mtimeMs, await fs.read(path))
-      cache.set(path, concept)
-      bundle.concepts.set(concept.id, concept)
     }
   }
-  await walk('')
+
+  const take = async (
+    entry: { name: string; kind: FsKind; mtimeMs: number; isLink: boolean },
+    dirRel: string,
+    rel: string,
+    realDir: string,
+  ): Promise<void> => {
+    const path = join(root, rel)
+    let { kind, mtimeMs } = entry
+    let realPath = join(realDir, entry.name)
+    if (entry.isLink) {
+      const target = await fs.stat(path)
+      ;({ kind, mtimeMs } = target)
+      realPath = target.realPath ?? realPath
+    }
+
+    if (kind === 'dir') {
+      if (SKIPPED_DIRS.has(entry.name)) return
+      if (walked.has(realPath)) throw new Error(`${realPath} is already walked through another path`)
+      walked.add(realPath)
+      bundle.dirs.add(rel)
+      await walk(rel, realPath)
+      return
+    }
+    if (kind !== 'file') return
+    if (bundle.files.size >= maxFiles) {
+      bundle.isTruncated = true
+      return
+    }
+    bundle.files.add(rel)
+    if (!rel.endsWith('.md')) return
+    if (entry.name === 'index.md') {
+      bundle.indexes.set(dirRel, path)
+      return
+    }
+    if (entry.name === 'log.md') {
+      bundle.logs.set(dirRel, { path, mtimeMs })
+      return
+    }
+
+    const cached = cache.get(path)
+    const concept =
+      cached !== undefined && cached.mtimeMs === mtimeMs
+        ? cached
+        : parseConcept(rel.slice(0, -'.md'.length), path, mtimeMs, await fs.read(path))
+    cache.set(path, concept)
+    bundle.concepts.set(concept.id, concept)
+  }
+  await walk('', realRoot)
 
   const rootIndex = bundle.indexes.get('')
   if (rootIndex !== undefined) {
-    const version = parseFrontmatter(await fs.read(rootIndex)).data.okf_version
-    if (version != null) bundle.okfVersion = String(version)
+    try {
+      const version = parseFrontmatter(await fs.read(rootIndex)).data.okf_version
+      if (version != null) bundle.okfVersion = String(version)
+    } catch (error) {
+      skip('index.md', error)
+    }
   }
 
   for (const concept of bundle.concepts.values()) {
@@ -203,8 +236,8 @@ export function parseConcept(id: string, path: string, mtimeMs: number, text: st
 /** A path within the bundle for `target` as written in the concept `fromId`, or undefined when external. */
 export function resolveRef(bundle: Bundle, fromId: string, target: string): { rel?: string; exists: boolean } {
   if (isExternal(target)) return { exists: false }
-  const clean = decodeURI(target.split('#')[0]?.split('?')[0] ?? '')
-  if (clean === '') return { exists: false }
+  const clean = decodeTarget(target.split('#')[0]?.split('?')[0] ?? '')
+  if (clean === undefined || clean === '') return { exists: false }
   const exists = (rel: string) => bundle.files.has(rel) || bundle.dirs.has(rel)
 
   if (clean.startsWith('/')) {
@@ -224,6 +257,15 @@ export function resolveLinks(bundle: Bundle, concept: Concept): ResolvedLink[] {
     if (isExternal(raw)) return []
     return [{ raw, ...resolveRef(bundle, concept.id, raw) }]
   })
+}
+
+/** undefined for a malformed escape such as a bare `%`. */
+function decodeTarget(target: string): string | undefined {
+  try {
+    return decodeURI(target)
+  } catch {
+    return undefined
+  }
 }
 
 export function isExternal(target: string): boolean {

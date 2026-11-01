@@ -52,8 +52,9 @@ export function memfs(tree: MemTree): FsLike & { entries(path: string): ReturnTy
       return text
     },
     stat: async p => {
-      const kind = kindOf(p) ?? 'other'
-      return { kind, mtimeMs: kind === 'file' ? mtime(p) : 0, realPath: kindOf(p) === undefined ? undefined : resolve(p) }
+      const kind = kindOf(p)
+      if (kind === undefined) throw new Error(`ENOENT: ${p}`)
+      return { kind, mtimeMs: kind === 'file' ? mtime(p) : 0, realPath: resolve(p) }
     },
   }
 }
