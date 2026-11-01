@@ -1,6 +1,7 @@
 [
   {
     "id": "i1",
+    "kind": "counterfactual",
     "text": "Write JavaScript that sends an analytics event to the server when the user leaves the page.",
     "all": [
       "keepalive"
@@ -8,31 +9,124 @@
   },
   {
     "id": "i2",
+    "kind": "counterfactual",
     "text": "I want to send about 2 MB of JSON between tabs with BroadcastChannel. Is it fine to just postMessage it?",
     "all": [
       "1\\s?MiB|1\\s?MB"
     ]
   },
   {
-    "id": "i3",
-    "text": "I'm saving users' drafts in localStorage. What storage limit should I design for?"
-  },
-  {
     "id": "i4",
+    "kind": "counterfactual",
     "text": "In a service worker, I want caches.match to return a response cached with Vary: Accept-Language regardless of the request's language. Write the code.",
     "all": [
       "(?is)(platform|this environment|bundle|プラットフォーム|この環境|バンドル).{0,200}ignoreVary|ignoreVary.{0,200}(platform|this environment|プラットフォーム|この環境)"
     ]
   },
   {
-    "id": "i5",
-    "text": "Write a key handler that submits a textarea when Enter is pressed."
-  },
-  {
     "id": "i6",
+    "kind": "counterfactual",
     "text": "I want to find code that uses outdated browser APIs. Which navigator APIs are deprecated?",
     "all": [
       "(?i)sendBeacon"
     ]
+  },
+  {
+    "id": "i7",
+    "kind": "counterfactual",
+    "text": "Lazy-load the images on a long article page, starting each load about 300px before the image scrolls into view.",
+    "all": [
+      "100\\s?px"
+    ]
+  },
+  {
+    "id": "i8",
+    "kind": "counterfactual",
+    "text": "Write the JavaScript for a Copy button next to each code block on a documentation web page.",
+    "all": [
+      "ClipboardItem"
+    ]
+  },
+  {
+    "id": "i9",
+    "kind": "counterfactual",
+    "text": "Write browser JavaScript that shows the user's current position on a map. A GPS fix can take up to 30 seconds, so allow for that.",
+    "all": [
+      "(?i)10\\s?,?000\\s?ms|10\\s?(秒|seconds)"
+    ]
+  },
+  {
+    "id": "i10",
+    "kind": "counterfactual",
+    "text": "Write a chat client that keeps a WebSocket connection open for a whole working day.",
+    "all": [
+      "(?i)45\\s?(秒|s\\b|sec|seconds)"
+    ]
+  },
+  {
+    "id": "i11",
+    "kind": "counterfactual",
+    "text": "We want to cache about 120 MB of offline map tiles in the browser with IndexedDB. Will that fit?",
+    "all": [
+      "200\\s?(MiB|MB)"
+    ]
+  },
+  {
+    "id": "i12",
+    "kind": "counterfactual",
+    "text": "Add a button that switches our video player to fullscreen.",
+    "all": [
+      "navigationUI"
+    ]
+  },
+  {
+    "id": "i3",
+    "kind": "related",
+    "text": "I'm saving users' drafts in localStorage. What storage limit should I design for?"
+  },
+  {
+    "id": "i5",
+    "kind": "related",
+    "text": "Write a key handler that submits a textarea when Enter is pressed."
+  },
+  {
+    "id": "i13",
+    "kind": "related",
+    "text": "Resize a chart whenever its container element changes size."
+  },
+  {
+    "id": "i14",
+    "kind": "related",
+    "text": "Let users drag files onto a drop zone and upload them."
+  },
+  {
+    "id": "i15",
+    "kind": "related",
+    "text": "In a web app, show a desktop notification when a long export finishes."
+  },
+  {
+    "id": "i16",
+    "kind": "unrelated",
+    "text": "Write a Python function that reads a CSV file and returns the average of its price column."
+  },
+  {
+    "id": "i17",
+    "kind": "unrelated",
+    "text": "Write a SQL query that returns the top 5 customers by total order amount."
+  },
+  {
+    "id": "i18",
+    "kind": "unrelated",
+    "text": "How do I undo my last git commit but keep the changes in my working tree?"
+  },
+  {
+    "id": "i19",
+    "kind": "unrelated",
+    "text": "Center a div horizontally and vertically with CSS."
+  },
+  {
+    "id": "i20",
+    "kind": "unrelated",
+    "text": "Write a shell one-liner that counts the lines in all .go files under a directory."
   }
 ]

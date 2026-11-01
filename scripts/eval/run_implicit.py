@@ -1,9 +1,11 @@
-"""Runs requests that never mention the bundle under three conditions and records whether Claude opened it.
+"""Runs requests that never mention the bundle under four conditions and records whether Claude opened it.
 
     python3 scripts/eval/run_implicit.py <plugin dir> <okf dir> <out dir> [reps] [parallel]
 
-Conditions: none (no plugin), claudemd (a project CLAUDE.md pointing at the bundles), okf (the plugin).
-Each condition runs in its own empty directory outside the bundle's source tree.
+Conditions: none (no plugin), claudemd (a project CLAUDE.md pointing at the bundles), okf (the plugin),
+okfhint (the plugin plus a one-line project CLAUDE.md telling Claude to look requests up in the bundles).
+Each run gets its own empty directory outside the bundle's source tree, and cannot write files, so a coding
+request leaves nothing for a later run to explore.
 """
 import json, os, re, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -21,29 +23,33 @@ CLAUDE_MD = """## OKF bundles
 - Prefer concepts whose `verified` has a `human:` entry. Say so when relying on one with `status: deprecated` or past its `stale_after`.
 - For `type: Attested Computation`, fill in only the parameters; never rewrite the computation.
 """
+HINT_MD = "- For a request the OKF bundles in your context may cover, look it up in them before answering.\n"
 # The installed cc-okf is turned off in every condition so a globally enabled copy cannot add its own bundles.
 ISOLATE = {"enabledPlugins": {"cc-okf@cc-okf": False}}
 OKF_TOUCH = re.compile(r"\.claude/okf|mcp__cc-okf|mdn_api")
 
-for cond in ("none", "claudemd", "okf"):
-    (out / "cwd" / cond).mkdir(parents=True, exist_ok=True)
-(out / "cwd" / "claudemd" / "CLAUDE.md").write_text(CLAUDE_MD)
+PROJECT_MD = {"claudemd": CLAUDE_MD, "okfhint": HINT_MD}
 
 def run(job):
     q, cond, rep = job
     path = out / f"{q['id']}.{cond}.{rep}.json"
     if path.exists():
         return
-    cmd = ["claude", "-p", "--output-format", "stream-json", "--verbose", "--allowedTools", *TOOLS]
+    cwd = out / "cwd" / path.stem
+    cwd.mkdir(parents=True, exist_ok=True)
+    if cond in PROJECT_MD:
+        (cwd / "CLAUDE.md").write_text(PROJECT_MD[cond])
+    cmd = ["claude", "-p", "--output-format", "stream-json", "--verbose", "--allowedTools", *TOOLS,
+           "--disallowedTools", "Write", "Edit", "NotebookEdit"]
     settings = dict(ISOLATE)
-    if cond == "okf":
+    if cond in ("okf", "okfhint"):
         cmd += ["--plugin-dir", plugin]
         settings["env"] = {"OKF_DIR": okf_dir}
     cmd += ["--settings", json.dumps(settings)]
     if os.environ.get("EVAL_MODEL"):
         cmd += ["--model", os.environ["EVAL_MODEL"]]
     res = subprocess.run([*cmd, "--", q["text"]], stdin=subprocess.DEVNULL, capture_output=True, text=True,
-                         cwd=out / "cwd" / cond)
+                         cwd=cwd)
     tool_uses, result = [], None
     for line in res.stdout.splitlines():
         try:

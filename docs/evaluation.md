@@ -77,15 +77,24 @@ The previous experiment again, with ten runs per question and condition (180 ses
 | --- | --- | --- | --- |
 | Turns | −1.87 | [−2.20, −1.55] | 0.001 |
 | Cost | −$0.044 | [−$0.060, −$0.027] | 0.001 |
-| Opened | −0.20 | [−0.28, −0.12] | 0.001 |
-| Followed the counterfactual | −0.12 | [−0.23, −0.02] | 0.10 |
+| Opened | −0.20 | – | 0.001 |
+| Followed the counterfactual | −0.12 | – | 0.10 |
 
 - The saving is real: cc-okf took 35% fewer turns and cost 30% less than the `CLAUDE.md` lines, and did so on each of the six questions.
+- The bootstrap interval is left out for yes/no rows: most of their cells were all yes, which makes it far too narrow. Fisher's exact test on 34/40 against 39/40 gives p 0.11.
 - The accuracy edge from n=2 did not hold. cc-okf followed the counterfactual less often, though not significantly. Its misses were on the `ignoreVary` request (6/10, against 10/10): all four wrong answers came from sessions that never opened the bundle, so the table of contents did not suggest that a service worker caching question touches `CacheStorage.match()`. The two `BroadcastChannel` misses opened the stale note but not the newer guide.
 - cc-okf skipped the bundle on the unrelated key handler half the time, and on the beacon request three times in ten, where general knowledge gave the right answer anyway.
 - Both hints beat no hint on every measure (Holm p 0.001).
 - The answers were in Japanese because of the author's global `CLAUDE.md`. The `ignoreVary` rubric now accepts the Japanese wording; four answers changed to correct after reading them.
 - Six questions on one bundle, so the tests generalise over runs, not over requests or bundles.
+
+## Suite for the lookup line (2026-11-01, Haiku, n=1)
+
+A smoke run of the suite prepared for [#14](https://github.com/yokonao/cc-okf/issues/14): six more counterfactuals, 20 requests tagged `counterfactual`, `related` or `unrelated`, and a fourth condition `okfhint` that adds one `CLAUDE.md` line telling Claude to look requests up in the bundles. It checked the pipeline and rubrics, not any difference.
+
+- Coding requests made Claude write files, and with one directory per condition the next run explored them. Each run now gets its own empty directory and cannot use Write or Edit. The n=10 Opus run above was not affected: its tool calls only read.
+- Requests saying "our docs site" or "show the user's position" sent Haiku searching the author's repositories or calling macOS location services; they now ask for browser code.
+- Haiku opened the bundle in 2/20 sessions under `okf` and 16/20 under `okfhint`. When it did open the bundle on the clipboard and geolocation requests, it read the interface page and missed the edited method page.
 
 ## Subagents get the table of contents (2026-11-01, n=1)
 
@@ -97,7 +106,7 @@ Adding a 1,000-concept synthetic bundle (about 2 MB) did not change the time of 
 
 ## Next
 
-- More requests and other bundles for the requests that never mention the bundle, so a test can generalise over requests; other models (Sonnet, Haiku).
-- Requests whose wording is far from the concept they need, like the `ignoreVary` one, to see when the table of contents fails to suggest a lookup.
+- Whether cc-okf should tell Claude to look requests up in the bundles: a 20-request, four-condition suite is ready ([#14](https://github.com/yokonao/cc-okf/issues/14)).
+- Other bundles.
 - A long session with several requests, where the table of contents is paid once.
 - The implicit requests run inside a subagent, to see whether it opens the bundle as the main loop does.
