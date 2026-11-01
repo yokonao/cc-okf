@@ -34,7 +34,7 @@ Requires Claude Code 2.1.316 or later; the plugin is a hooks module, an early-ac
 
 ## Add a bundle
 
-A bundle is any directory, or link to one, directly under the bundles directory, `~/.claude/okf/` by default. Its directory name is the bundle's name. To keep bundles elsewhere, set the `bundlesDir` option or the `OKF_DIR` environment variable (for example in the `env` block of `~/.claude/settings.json`); without either, `$CLAUDE_CONFIG_DIR/okf/` is used when that is set. A leading `~` means your home directory.
+A bundle is any directory, or link to one, directly under the bundles directory, `~/.claude/okf/` by default. Its directory name is the bundle's name. To keep bundles elsewhere, set the `bundlesDir` option or the `OKF_DIR` environment variable (for example in the `env` block of `~/.claude/settings.json`); without either, `$CLAUDE_CONFIG_DIR/okf/` is used when that is set. A leading `~` means your home directory. Inside a bundle, a link to a directory is followed only when it stays within the bundle; the scan skips any other and lists it in `/okf`.
 
 ```sh
 git clone https://github.com/GoogleCloudPlatform/open-knowledge-format /tmp/okf
