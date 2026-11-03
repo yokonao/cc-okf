@@ -236,9 +236,8 @@ export function parseConcept(id: string, path: string, mtimeMs: number, text: st
 
 /** A path within the bundle for `target` as written in the concept `fromId`, or undefined when external. */
 export function resolveRef(bundle: Bundle, fromId: string, target: string): { rel?: string; exists: boolean } {
-  if (isExternal(target)) return { exists: false }
-  const clean = decodeTarget(target.split('#')[0]?.split('?')[0] ?? '')
-  if (clean === undefined || clean === '') return { exists: false }
+  const clean = cleanTarget(target)
+  if (clean === undefined) return { exists: false }
   const exists = (rel: string) => bundle.files.has(rel) || bundle.dirs.has(rel)
 
   if (clean.startsWith('/')) {
@@ -258,6 +257,13 @@ export function resolveLinks(bundle: Bundle, concept: Concept): ResolvedLink[] {
     if (isExternal(raw)) return []
     return [{ raw, ...resolveRef(bundle, concept.id, raw) }]
   })
+}
+
+/** `target` as a path without its fragment and query, or undefined when external, empty or malformed. */
+export function cleanTarget(target: string): string | undefined {
+  if (isExternal(target)) return undefined
+  const clean = decodeTarget(target.split('#')[0]?.split('?')[0] ?? '')
+  return clean === '' ? undefined : clean
 }
 
 /** undefined for a malformed escape such as a bare `%`. */
