@@ -70,7 +70,7 @@ bun scripts/inspect.ts ~/.claude/okf 4000 > ~/.claude/okf-toc.md
 - It goes stale. Run the command again after adding or editing concepts; trust and staleness counts are as of the last run.
 - A bundle with a hand-written root `index.md` can be imported directly instead (`@~/.claude/okf/<name>/index.md`). That drops the preamble and the token budget, so it suits small bundles.
 
-This is a fallback, not an equivalent. Against a four-line `CLAUDE.md`, the file took 0.7 fewer turns but cost $0.03 more per one-shot session ([docs/evaluation.md](docs/evaluation.md)); whether it matches the hook is not measured.
+This is a fallback, not an equivalent. Against a four-line `CLAUDE.md`, the file took 0.7 fewer turns but cost $0.03 more per one-shot session. Over a 16-request session it cost about $0.30 more and followed 39/40 changed facts against 20/40 ([docs/evaluation.md](docs/evaluation.md)). Whether it matches the hook is not measured.
 
 ## Options
 
