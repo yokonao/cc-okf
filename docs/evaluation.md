@@ -129,6 +129,42 @@ Holm p in brackets, over 20 rows.
 - Costs are about five times those of the n=10 run above (`none` $0.254 against $0.045), from a larger global `CLAUDE.md` and MCP tool list on this machine. Compare conditions, not absolute costs.
 - 84 sessions failed with an authentication error during a 30-minute outage and were run again; none hit a usage limit.
 
+## Long sessions (2026-11-03, Opus, n=10)
+
+From [#19](https://github.com/yokonao/cc-okf/issues/19). One-shot runs write the table of contents to the cache and never reuse it, so this checks whether it pays for itself over a session. One session sends 16 requests in order: 4 counterfactual, 4 related and 8 unrelated, from `scripts/eval/questions_implicit.json` plus 7 new unrelated requests (Go, regex, Dockerfile, TypeScript, Makefile, Kubernetes, git). Each of the 10 sequences has its own shuffled order, shared by every condition. The first request uses `claude -p --session-id`, the rest `--resume`, with the runner's flags. `okf` and `okfhint` were not run because of `cc-plugin-sec-default`. 40 sessions, 640 requests, Opus 5.5, Claude Code 2.1.316; none failed. The session runner is not in the repository.
+
+Under `--resume`, `total_cost_usd` is the session's running total, so per-request costs are differences.
+
+| Condition | Opened (cf / related / unrelated) | Followed the counterfactual | Avg turns per request | Session cost |
+| --- | --- | --- | --- | --- |
+| No hint | 0/40 / 0/40 / 0/80 | 5/40 | 1.08 | $0.957 |
+| `CLAUDE.md`, 4 lines | 16/40 / 17/40 / 1/80 | 20/40 | 1.52 | $1.192 |
+| static | 37/40 / 34/40 / 0/80 | 39/40 | 2.09 | $1.487 |
+| static + lookup line | 38/40 / 40/40 / 0/80 | 37/40 | 2.27 | $1.722 |
+
+| Cumulative cost after request | No hint | `CLAUDE.md` | static | static + line |
+| --- | --- | --- | --- | --- |
+| 1 | $0.238 | $0.283 | $0.330 | $0.341 |
+| 4 | $0.369 | $0.466 | $0.572 | $0.644 |
+| 8 | $0.531 | $0.675 | $0.842 | $1.009 |
+| 16 | $0.957 | $1.192 | $1.487 | $1.722 |
+
+| Comparison | Session cost | Session turns | Counterfactual correct |
+| --- | --- | --- | --- |
+| static − `CLAUDE.md` | +$0.295 (0.17) | +9.1 (0.17) | +0.48 (0.27) |
+| line − static | +$0.235 (0.27) | +2.9 (0.79) | −0.05 (1.00) |
+| line − `CLAUDE.md` | +$0.530 (0.036) | +12.0 (0.038) | +0.43 (0.29) |
+| static − no hint | +$0.529 (0.036) | +16.2 (0.030) | +0.85 (0.027) |
+
+Holm p in brackets: a sign-flip permutation test paired over the 10 sequences, adjusted over 16 rows.
+
+- No break-even within 16 requests. static stays about $0.30 above the `CLAUDE.md` lines at every position: the gap opens with the first request's cache write and widens with each lookup.
+- The expected waste is not there. In a long session the `CLAUDE.md` lines opened the bundle on 1 of 80 unrelated requests. A lookup adds about $0.08–0.10 to a request and does not visibly grow with context, up to about 100k tokens.
+- What the table of contents buys is a lookup that starts at all. The `CLAUDE.md` lines followed 77/100 counterfactuals one-shot but 20/40 here; static followed 39/40. With the lines, a counterfactual or related request was looked up 5/49 times before the session's first lookup and 28/31 after; with static, 10/15 and 61/65. A session that opens with unrelated requests answered from memory tends not to start looking. Sessions that look early contribute more requests to "after", so read the split as a tendency.
+- The lookup line added lookups on related requests (40/40 against 34/40) and $0.24 per session, with no gain in correctness (37/40 against 39/40).
+- So over a session, the table of contents buys correctness, not cost.
+- One mix, 16 requests, contexts under about 100k tokens; larger contexts and compaction are untested. static puts the table of contents in `CLAUDE.md`, the hook in the first user message. Reuse of a cached table of contents across sessions is not measured.
+
 ## Subagents get the table of contents (2026-11-01, n=1)
 
 In an interactive Claude Code 2.1.316 session with cc-okf and one bundle, a `general-purpose` subagent (Haiku) spawned with the `Agent` tool was asked, with no tools, whether its context held the block. It quoted the preamble line, listed the bundle's `## kakeibo` header and named the `okfBundles` block. So `prompt.context` runs for a subagent's conversation too. This checks that the block arrives, not that a subagent opens the bundle on an implicit request.
@@ -141,5 +177,5 @@ Adding a 1,000-concept synthetic bundle (about 2 MB) did not change the time of 
 
 - The lookup line delivered by the hook rather than a static `CLAUDE.md`, on a machine without `cc-plugin-sec-default`.
 - Other bundles.
-- A long session with several requests, where the table of contents is paid once and may cost less than the `CLAUDE.md` lines' lookups.
+- Long sessions with larger contexts and compaction, and the hook instead of a static table of contents.
 - The implicit requests run inside a subagent, to see whether it opens the bundle as the main loop does.
