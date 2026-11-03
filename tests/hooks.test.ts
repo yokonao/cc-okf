@@ -52,6 +52,19 @@ test('a Read inside a bundle gets the concept note, through the link or its targ
   expect(index.context?.join('\n')).toContain(`relative to ${ROOT}/`)
 })
 
+test('a concept attached with @ gets the same note; other files and missing ones do not', async ($, on) => {
+  engine(on)
+  on('prompt.mention', (_, e) => ({ type: e.path.includes('missing') ? null : 'file' }))
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: false })
+
+  const concept = await $.prompt.mention({ mention: 'shop/metrics/revenue.md', path: `${ROOT}/metrics/revenue.md` })
+  expect(concept.context?.join('\n')).toContain('cc-okf: OKF concept shop:metrics/revenue')
+  const outside = await $.prompt.mention({ mention: 'notes.md', path: '/home/u/notes.md' })
+  expect(outside.context).toBeUndefined()
+  const missing = await $.prompt.mention({ mention: 'missing.md', path: `${ROOT}/missing.md` })
+  expect(missing.context).toBeUndefined()
+})
+
 test('okf_search and okf_index answer from the scanned bundle', async ($, on) => {
   engine(on)
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: false })
