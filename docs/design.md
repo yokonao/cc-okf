@@ -10,7 +10,7 @@ cc-okf makes Open Knowledge Format (OKF) bundles behave in Claude Code the way s
 | Lazy loading | the Skill tool; `Read` of a memory file | `Read` of a concept, annotated |
 | Change tracking | instruction files re-sent when they change | change notes on the next prompt |
 | Survives compaction | invoked skills re-attached; context re-read | the context block is recomputed |
-| Explicit reference | `/name`, `@` imports | `@okf:<bundle>/<id>` with typeahead |
+| Explicit reference | `/name`, `@` imports | `@` mention of a concept, annotated |
 
 ## Hooks used
 
@@ -21,7 +21,7 @@ cc-okf makes Open Knowledge Format (OKF) bundles behave in Claude Code the way s
 | `tool.call` on `Write` / `Edit` | Marks the scan stale when a bundle file changes. |
 | `$.tool.register` | `okf_search` and `okf_index`, deferred behind ToolSearch (see below). |
 | `prompt.submit` | Compares the bundles with what this session was last told and attaches a change note. Rescans at most every 30 seconds unless Claude wrote into a bundle, since a bundle the size of MDN takes about a second to list. |
-| `prompt.mention`, `prompt.autocomplete` | Resolve and complete `@okf:` mentions. |
+| `prompt.mention` | Appends the `Read` note to a concept attached with `@`. |
 | `$.command.register` | `/okf`. |
 | `$.store` | The per-session baseline for change notes. |
 

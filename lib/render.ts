@@ -8,7 +8,7 @@ export const SEARCH_TOOL = 'mcp__cc-okf__okf_search'
 export const INDEX_TOOL = 'mcp__cc-okf__okf_index'
 
 /** Short markers for a concept that is not plainly current and trusted. */
-export function flags(concept: Concept, now: number): string[] {
+function flags(concept: Concept, now: number): string[] {
   const out: string[] = [concept.trust]
   if (concept.status !== 'stable') out.push(concept.status)
   if (isStale(concept.staleAfter, now)) out.push('stale')

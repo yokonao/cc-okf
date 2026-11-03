@@ -11,7 +11,6 @@ import {
   renderToc,
 } from '../lib/render.ts'
 import { diff, fromStored, newestLogSection, renderChanges, snapshot, toStored, touchIndex } from '../lib/changes.ts'
-import { resolveMention, suggestMentions } from '../lib/mention.ts'
 import { search } from '../lib/search.ts'
 import { TRUST_TIERS, type TrustTier } from '../lib/trust.ts'
 
@@ -197,19 +196,11 @@ export const register: Register = (on, options) => {
   }).catch(($, e, next) => next(e))
 
   on('prompt.mention', async ($, e, next) => {
-    const { bundles } = await scan($)
-    const target = resolveMention(bundles, e.mention)
-    const result = await next(target === undefined ? e : { ...e, path: target.path })
+    const result = await next(e)
     if (result.deny !== undefined || result.type === null) return result
-    const note = await noteForRead($, target?.path ?? e.path)
+    const note = await noteForRead($, e.path)
     return note === undefined ? result : { ...result, context: [...(result.context ?? []), note] }
   }).catch(($, e, next) => next(e))
-
-  on('prompt.autocomplete', { token: /^@okf:/ }, async ($, e, next) => {
-    const result = await next(e)
-    const { bundles } = await scan($)
-    return { suggestions: [...result.suggestions, ...suggestMentions(bundles, e.token, await $.clock.now())] }
-  })
 
   on('tool.call', { tool: 'Read' }, async ($, e, next) => {
     const result = await next(e)

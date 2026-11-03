@@ -9,7 +9,7 @@ It reads bundles and never writes them.
 - **Table of contents in context.** Each conversation's first message carries an `okfBundles` block: every bundle's path, concept counts by trust tier, stale and deprecated counts, and its root `index.md` (synthesized from frontmatter when missing). The block is rebuilt after compaction and capped by a token budget.
 - **Annotated reads.** When Claude reads a concept with `Read`, a note follows the result: its trust tier (OKF §5.3), status, staleness against `stale_after`, every link resolved to an absolute path, and the concepts that link to it. Links starting with `/` are bundle-relative in OKF, so this is what keeps Claude from looking for them at the filesystem root. An Attested Computation's note says to supply only its declared parameters.
 - **Frontmatter search.** `okf_search` filters concepts by words, `type`, `tags`, minimum trust tier, staleness and status. `okf_index` lists a directory with flags. Full-text search stays with Grep.
-- **Mentions.** `@okf:<bundle>/<concept id>` (or `@okf:<bundle>/<dir>/` for its index) attaches the file with the same note; the prompt box completes `@okf:` by bundle, id and title.
+- **Mentions.** A concept attached with `@` gets the same note as a `Read`.
 - **Change notes.** When a bundle changes between prompts (a concept added, removed or edited, a `log.md` updated), the next prompt carries a note listing what changed and the newest `log.md` entry, so Claude knows what it read earlier may be outdated.
 - **`/okf`** lists the bundles; `/okf rescan` reads them again.
 
