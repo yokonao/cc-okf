@@ -37,6 +37,8 @@ cc-okf makes Open Knowledge Format (OKF) bundles behave in Claude Code the way s
 
 **Links resolve from the concept, then from the bundle root.** OKF §6 says relative links are relative to the concept, but producers, Google's samples included, often write paths from the bundle root. cc-okf takes whichever exists.
 
+**Links into sibling bundles are an extension.** OKF v0.2 resolves links only within a bundle. A relative link leaving the bundle by one level, `../<name>/<rest>`, resolves into the bundle `<name>` in the same bundles directory, by the same rule as okf-view. It stays within the spec, since to other consumers it is a broken link they must tolerate, and it is kept to `lib/sibling.ts` and two callers so it can go once OKF defines links across bundles. Trust does not travel along these links: the target's note carries its own tier.
+
 **One language, no CLI.** The plugin is a TypeScript hooks module alone, so installing it is one `/plugin install` line. A hooks module imports only files inside the plugin, so js-yaml 4.1.0 is vendored; it parses with the core schema so timestamps stay strings.
 
 **Bundles live in `~/.claude/okf/<name>/` by default**, mirroring `~/.claude/skills/<name>/`. A link to a directory counts. OKF is not tied to one tool, so the `bundlesDir` option or `$OKF_DIR` can point elsewhere (say `~/.okf`), where other agents can read the same bundles. There is no project scope yet.

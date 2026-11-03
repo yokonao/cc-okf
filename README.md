@@ -46,6 +46,12 @@ A bundle added during a session shows up in tools and `/okf` at once, and in the
 
 The table of contents shows each bundle's root `index.md`, so that file decides when Claude thinks to look. Write it to say which questions the bundle answers, close to leaf level, rather than only listing subdirectories.
 
+### Links into sibling bundles
+
+cc-okf resolves one kind of link that OKF v0.2 leaves undefined. A relative link that leaves its bundle by one level, such as `../kakeibo/accounts/index.md`, resolves into the bundle named `kakeibo` in the same bundles directory: the note on a read gives its path, and the target lists the concept among the concepts referencing it.
+
+This is an extension, not part of the spec. It doesn't break the spec either: the link is a relative path (§6.2), and to a consumer without the extension it's a broken link, which consumers must tolerate (§11). It lives in `lib/sibling.ts` and goes away once OKF defines links across bundles.
+
 ## Managed machines and Team/Enterprise plans
 
 On a machine with managed settings or a `managed-mcp.json`, or on a Team or Enterprise plan, Claude Code seats its built-in guard `cc-plugin-sec-default` first. The guard sends `prompt.context` on past user-installed plugins, so the table of contents never reaches the session. `--settings`, `enabledPlugins` and `--plugin-dir` cannot change this; only managed settings can.

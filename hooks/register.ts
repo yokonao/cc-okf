@@ -1,6 +1,7 @@
 import type { EngineInterface, Register } from 'claude-code'
 import { type Bundle, type ConceptCache, type FsLike, discoverBundles, scanBundle } from '../lib/bundle.ts'
 import { join, normalize, relativeTo } from '../lib/paths.ts'
+import { linkSiblings } from '../lib/sibling.ts'
 import {
   indexBody,
   renderBundles,
@@ -62,6 +63,7 @@ async function scan($: EngineInterface, maxAgeMs = RESCAN_AFTER_MS): Promise<Sca
         const bundle = await scanBundle(fs, name, root, cache).catch(() => undefined)
         if (bundle !== undefined) bundles.push(bundle)
       }
+      linkSiblings(bundles)
       const rootIndexes = new Map<string, string | undefined>()
       for (const b of bundles) {
         const index = b.indexes.get('')

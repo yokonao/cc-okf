@@ -1,4 +1,5 @@
 import { type Bundle, type Concept, resolveLinks, resolveRef } from './bundle.ts'
+import { resolveSibling, siblingBacklinks } from './sibling.ts'
 import { parseFrontmatter } from './frontmatter.ts'
 import { join } from './paths.ts'
 import type { SearchHit } from './search.ts'
@@ -203,13 +204,18 @@ export function renderConceptNote(bundle: Bundle, concept: Concept, now: number)
   if (links.length > 0) {
     lines.push('Links in this concept, resolved:')
     for (const link of links.slice(0, 40)) {
+      const sibling = link.exists ? undefined : resolveSibling(bundle, concept.id, link.raw)
+      if (sibling !== undefined) {
+        lines.push(`- ${link.raw} → ${join(sibling.bundle.root, sibling.rel)} (bundle ${sibling.bundle.name})`)
+        continue
+      }
       const target = link.rel === undefined ? '(outside the bundle)' : join(bundle.root, link.rel)
       lines.push(`- ${link.raw} → ${target}${link.exists ? '' : ' (not in the bundle)'}`)
     }
     if (links.length > 40) lines.push(`- … ${links.length - 40} more`)
   }
 
-  const backlinks = bundle.backlinks.get(concept.id) ?? []
+  const backlinks = [...(bundle.backlinks.get(concept.id) ?? []), ...siblingBacklinks(bundle, concept.id)]
   if (backlinks.length > 0) lines.push(`Referenced by: ${backlinks.slice(0, 20).join(', ')}`)
   return lines.join('\n')
 }
