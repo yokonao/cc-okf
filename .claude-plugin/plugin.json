@@ -7,6 +7,9 @@
   },
   "repository": "https://github.com/yokonao/cc-okf",
   "license": "MIT",
+  "engines": {
+    "claude-code": ">=2.1.316"
+  },
   "userConfig": {
     "tocBudgetTokens": {
       "type": "number",

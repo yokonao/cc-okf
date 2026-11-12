@@ -30,7 +30,7 @@ At the prompt of a terminal session:
 /plugin install cc-okf --marketplace yokonao/cc-okf
 ```
 
-Requires Claude Code 2.1.316 or later; the plugin is a hooks module, an early-access API. CI tests it daily against 2.1.316 and the latest release.
+Requires Claude Code 2.1.316 or later, which `engines` in plugin.json enforces from 2.1.323 on; the plugin is a hooks module, an early-access API. CI tests it daily against 2.1.316 and the latest release.
 
 ## Add a bundle
 
@@ -90,7 +90,7 @@ Set it in `/config`, or under `pluginConfigs` in `~/.claude/settings.json`.
 ## Development
 
 ```sh
-claude plugin validate .
+claude plugin validate --strict .
 claude plugin test .
 npx -p typescript@5.6.3 tsc -p .   # after copying the engine's types into .claude-plugin/types/
 claude --plugin-dir .              # try it in a session
