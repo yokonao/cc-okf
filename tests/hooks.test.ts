@@ -1,8 +1,8 @@
 import type { On } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
-import { scanBundle } from '../lib/bundle.ts'
-import { snapshot, toStored } from '../lib/changes.ts'
-import { NOW, memfs, shopTree } from './memfs.ts'
+import { scanBundle } from '../lib/bundle'
+import { snapshot, toStored } from '../lib/changes'
+import { NOW, memfs, shopTree } from './memfs'
 
 const OKF = '/home/u/.claude/okf'
 const ROOT = `${OKF}/shop`

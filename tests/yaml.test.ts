@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'claude-code/testing'
-import { parseFrontmatter } from '../lib/frontmatter.ts'
+import { parseFrontmatter } from '../lib/frontmatter'
 
 // Runs in the hooks environment, so it also shows the vendored js-yaml loads there.
 describe('vendored js-yaml', () => {

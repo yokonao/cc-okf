@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'claude-code/testing'
-import { discoverBundles, scanBundle } from '../lib/bundle.ts'
-import { renderConceptNote } from '../lib/render.ts'
-import { linkSiblings, resolveSibling } from '../lib/sibling.ts'
-import { NOW, memfs } from './memfs.ts'
+import { discoverBundles, scanBundle } from '../lib/bundle'
+import { renderConceptNote } from '../lib/render'
+import { linkSiblings, resolveSibling } from '../lib/sibling'
+import { NOW, memfs } from './memfs'
 
 const DIR = '/home/u/okf'
 const fm = (body: string) => `---\ntype: Note\n---\n${body}\n`

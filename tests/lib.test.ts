@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'claude-code/testing'
-import { discoverBundles, parseConcept, resolveLinks, scanBundle } from '../lib/bundle.ts'
-import { parseFrontmatter } from '../lib/frontmatter.ts'
-import { normalize, relativeTo } from '../lib/paths.ts'
-import { renderConceptNote, renderDirectory, renderToc, synthesizeIndex } from '../lib/render.ts'
-import { search } from '../lib/search.ts'
-import { isStale, trustTier, verifications } from '../lib/trust.ts'
-import { NOW, memfs, shopTree } from './memfs.ts'
+import { discoverBundles, parseConcept, resolveLinks, scanBundle } from '../lib/bundle'
+import { parseFrontmatter } from '../lib/frontmatter'
+import { normalize, relativeTo } from '../lib/paths'
+import { renderConceptNote, renderDirectory, renderToc, synthesizeIndex } from '../lib/render'
+import { search } from '../lib/search'
+import { isStale, trustTier, verifications } from '../lib/trust'
+import { NOW, memfs, shopTree } from './memfs'
 
 const ROOT = '/home/u/.claude/okf/shop'
 

@@ -1,5 +1,5 @@
-import type { Bundle } from './bundle.ts'
-import { parseFrontmatter } from './frontmatter.ts'
+import type { Bundle } from './bundle'
+import { parseFrontmatter } from './frontmatter'
 
 /** What the model was last told about each bundle: concept and log.md mtimes. */
 export type Snapshot = Map<string, { concepts: Map<string, number>; logs: Map<string, number> }>
