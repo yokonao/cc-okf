@@ -1,6 +1,6 @@
-import { parseFrontmatter } from './frontmatter.ts'
-import { basename, dirname, join, normalize, relativeTo } from './paths.ts'
-import { type TrustTier, type Verification, trustTier, verifications } from './trust.ts'
+import { parseFrontmatter } from './frontmatter'
+import { basename, dirname, join, normalize, relativeTo } from './paths'
+import { type TrustTier, type Verification, trustTier, verifications } from './trust'
 
 export type FsKind = 'file' | 'dir' | 'other'
 

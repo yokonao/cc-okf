@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
-import { scanBundle } from '../lib/bundle.ts'
-import { KEPT_SESSIONS, diff, fromStored, newestLogSection, renderChanges, snapshot, toStored, touchIndex } from '../lib/changes.ts'
-import { NOW, memfs, shopTree } from './memfs.ts'
+import { scanBundle } from '../lib/bundle'
+import { KEPT_SESSIONS, diff, fromStored, newestLogSection, renderChanges, snapshot, toStored, touchIndex } from '../lib/changes'
+import { NOW, memfs, shopTree } from './memfs'
 
 const ROOT = '/okf/shop'
 const scan = (files: Record<string, string>, mtimeMs?: Record<string, number>) =>

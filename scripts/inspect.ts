@@ -1,8 +1,8 @@
 // Prints what cc-okf would put in context for the bundles in a directory:
 //   bun scripts/inspect.ts [okf dir] [budget tokens]
 import { lstat, readFile, readdir, realpath, stat } from 'node:fs/promises'
-import { type FsLike, discoverBundles, scanBundle } from '../lib/bundle.ts'
-import { indexBody, renderToc } from '../lib/render.ts'
+import { type FsLike, discoverBundles, scanBundle } from '../lib/bundle'
+import { indexBody, renderToc } from '../lib/render'
 
 const fs: FsLike = {
   exists: p => stat(p).then(() => true, () => false),

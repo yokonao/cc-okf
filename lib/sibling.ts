@@ -5,8 +5,8 @@
 // is a relative path (§6.2) and, to a consumer without the extension, a
 // broken link it must tolerate (§11). Drop this file and its callers once
 // OKF defines links across bundles.
-import { type Bundle, cleanTarget, resolveLinks } from './bundle.ts'
-import { dirname, join, normalize } from './paths.ts'
+import { type Bundle, cleanTarget, resolveLinks } from './bundle'
+import { dirname, join, normalize } from './paths'
 
 const siblingsOf = new WeakMap<Bundle, readonly Bundle[]>()
 /** Concept id → `<bundle>:<id>` of the concepts in other bundles linking to it. */

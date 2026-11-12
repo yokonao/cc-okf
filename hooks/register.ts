@@ -1,7 +1,7 @@
 import type { EngineInterface, Register } from 'claude-code'
-import { type Bundle, type ConceptCache, type FsLike, discoverBundles, scanBundle } from '../lib/bundle.ts'
-import { join, normalize, relativeTo } from '../lib/paths.ts'
-import { linkSiblings } from '../lib/sibling.ts'
+import { type Bundle, type ConceptCache, type FsLike, discoverBundles, scanBundle } from '../lib/bundle'
+import { join, normalize, relativeTo } from '../lib/paths'
+import { linkSiblings } from '../lib/sibling'
 import {
   indexBody,
   renderBundles,
@@ -10,10 +10,10 @@ import {
   renderIndexNote,
   renderSearch,
   renderToc,
-} from '../lib/render.ts'
-import { diff, fromStored, newestLogSection, renderChanges, snapshot, toStored, touchIndex } from '../lib/changes.ts'
-import { search } from '../lib/search.ts'
-import { TRUST_TIERS, type TrustTier } from '../lib/trust.ts'
+} from '../lib/render'
+import { diff, fromStored, newestLogSection, renderChanges, snapshot, toStored, touchIndex } from '../lib/changes'
+import { search } from '../lib/search'
+import { TRUST_TIERS, type TrustTier } from '../lib/trust'
 
 const CONTEXT_BLOCK = 'okfBundles'
 const CHARS_PER_TOKEN = 4

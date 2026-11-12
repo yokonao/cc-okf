@@ -1,5 +1,5 @@
-import type { Bundle, Concept } from './bundle.ts'
-import { type TrustTier, isStale, trustRank } from './trust.ts'
+import type { Bundle, Concept } from './bundle'
+import { type TrustTier, isStale, trustRank } from './trust'
 
 export type SearchQuery = {
   query?: string

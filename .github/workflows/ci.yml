@@ -31,7 +31,8 @@ jobs:
           node-version: 22
       - run: npm install -g @anthropic-ai/claude-code@${{ matrix.claude-code }}
       - run: claude --version
-      - run: claude plugin validate .
+      # 2.1.316 warns that `engines` is an unknown field, so only latest is strict.
+      - run: claude plugin validate ${{ matrix.claude-code == 'latest' && '--strict' || '' }} .
       - run: claude plugin test .
 
   report:

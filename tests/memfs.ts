@@ -1,5 +1,5 @@
-import type { FsKind, FsLike } from '../lib/bundle.ts'
-import { normalize, relativeTo } from '../lib/paths.ts'
+import type { FsKind, FsLike } from '../lib/bundle'
+import { normalize, relativeTo } from '../lib/paths'
 
 export type MemTree = { files: Record<string, string>; links?: Record<string, string>; mtimeMs?: Record<string, number> }
 
